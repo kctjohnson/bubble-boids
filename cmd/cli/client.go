@@ -1,4 +1,4 @@
-package main
+package cli
 
 import (
 	"fmt"
@@ -17,6 +17,7 @@ type TickMsg time.Time
 
 type model struct {
 	screen         *screen.Screen
+	virtualScreen  *screen.VirtualScreen
 	boids          *[]*boid.Boid
 	scatterCounter int // Starts at 0, when it hits 500, all of the boids are scattered
 }
@@ -110,7 +111,7 @@ func (m model) View() string {
 	return m.screen.GetScreen()
 }
 
-func main() {
+func Execute() {
 	rand.Seed(time.Now().UTC().UnixNano())
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if err := p.Start(); err != nil {
