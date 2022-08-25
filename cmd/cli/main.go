@@ -105,7 +105,7 @@ func (m model) View() string {
 		if posY < 0 {
 			posY = 0
 		}
-		m.screen.SetRune(posX, posY/3, '*')
+		m.screen.SetRune(posX, posY/utils.TermRatio, '*')
 	}
 	return m.screen.GetScreen()
 }
