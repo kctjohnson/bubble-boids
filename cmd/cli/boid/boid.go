@@ -92,7 +92,6 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 
 func (b *Boid) Flock(boids *[]*Boid) {
 	force := b.BoidLogic(boids)
-
 	b.Acceleration = b.Acceleration.Add(force)
 }
 
