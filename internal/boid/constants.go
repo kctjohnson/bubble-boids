@@ -1,4 +1,4 @@
-package cli
+package boid
 
 const BoidCount = 300
 const MaxForce = 0.3

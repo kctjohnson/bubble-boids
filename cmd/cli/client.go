@@ -7,6 +7,8 @@ import (
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/kctjohnson/bubble-boids/internal/boid"
+	"github.com/kctjohnson/bubble-boids/internal/vecmath"
 	"golang.org/x/term"
 )
 
@@ -15,7 +17,7 @@ type TickMsg time.Time
 type model struct {
 	screen         *Screen
 	virtualScreen  *VirtualScreen
-	boids          *[]*Boid
+	boids          *[]*boid.Boid
 	scatterCounter int // Starts at 0, when it hits 500, all of the boids are scattered
 }
 
@@ -25,8 +27,8 @@ func initialModel() model {
 		panic("Yikes")
 	}
 
-	newBoidSlice := new([]*Boid)
-	*newBoidSlice = make([]*Boid, 0)
+	newBoidSlice := new([]*boid.Boid)
+	*newBoidSlice = make([]*boid.Boid, 0)
 
 	return model{
 		screen:         NewScreen(width, height),
@@ -44,10 +46,10 @@ func (m model) tick() tea.Cmd {
 func (m model) Frame() (tea.Model, tea.Cmd) {
 	m.scatterCounter++
 	for _, b := range *m.boids {
-		if m.scatterCounter >= ScatterCounterCap {
+		if m.scatterCounter >= boid.ScatterCounterCap {
 			// Randomize velocity and acceleration
-			b.Velocity = RandomVec2(-MaxSpeed, MaxSpeed)
-			b.Acceleration = RandomVec2(-MaxSpeed, MaxSpeed)
+			b.Velocity = vecmath.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
+			b.Acceleration = vecmath.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
 		} else {
 			b.Edges(m.screen.Width, m.screen.Height)
 			b.Flock(m.boids)
@@ -55,16 +57,16 @@ func (m model) Frame() (tea.Model, tea.Cmd) {
 		b.Update()
 	}
 
-	if m.scatterCounter >= ScatterCounterCap {
+	if m.scatterCounter >= boid.ScatterCounterCap {
 		m.scatterCounter = 0
 	}
 	return m, m.tick()
 }
 
 func (m model) Init() tea.Cmd {
-	numberOfBoids := BoidCount
+	numberOfBoids := boid.BoidCount
 	for i := 0; i < numberOfBoids; i++ {
-		*m.boids = append(*m.boids, NewBoid(i, m.screen.Width, m.screen.Height))
+		*m.boids = append(*m.boids, boid.NewBoid(i, m.screen.Width, m.screen.Height))
 	}
 	return m.tick()
 }
@@ -103,7 +105,7 @@ func (m model) View() string {
 		if posY < 0 {
 			posY = 0
 		}
-		m.screen.SetRune(posX, posY/TermRatio, '*')
+		m.screen.SetRune(posX, posY/boid.TermRatio, '*')
 	}
 	return m.screen.GetScreen()
 }

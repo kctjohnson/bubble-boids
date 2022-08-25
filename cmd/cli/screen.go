@@ -3,6 +3,8 @@ package cli
 import (
 	"fmt"
 	"strings"
+
+	"github.com/kctjohnson/bubble-boids/internal/boid"
 )
 
 // Virtual screen is made based on the size of the terminal screen in rows and columns.
@@ -44,7 +46,7 @@ func (s Screen) GetScreen() string {
 		}
 		finalScreen += "\n"
 	}
-	finalScreen += fmt.Sprintf("Max Force: %f | Max Speed: %f | Boid Qty: %d", MaxForce, MaxSpeed, BoidCount)
+	finalScreen += fmt.Sprintf("Max Force: %f | Max Speed: %f | Boid Qty: %d", boid.MaxForce, boid.MaxSpeed, boid.BoidCount)
 	return strings.Trim(finalScreen, "\n")
 }
 

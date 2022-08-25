@@ -1,9 +1,10 @@
-package cli
+package boid
 
 import (
 	"math/rand"
 
 	"github.com/go-gl/mathgl/mgl64"
+	"github.com/kctjohnson/bubble-boids/internal/vecmath"
 )
 
 type Boid struct {
@@ -21,7 +22,7 @@ func NewBoid(id int, screenWidth int, screenHeight int) *Boid {
 		rand.Float64() * float64(screenHeight),
 	}
 	newBoid.Velocity = mgl64.Vec2{rand.Float64(), rand.Float64()}
-	newBoid.Velocity = SetMag(newBoid.Velocity, rand.Float64()*8-4) // 2 to 4
+	newBoid.Velocity = vecmath.SetMag(newBoid.Velocity, rand.Float64()*8-4) // 2 to 4
 	newBoid.Acceleration = mgl64.Vec2{0.0, 0.0}
 	return newBoid
 }
@@ -47,7 +48,7 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 	cohesion := mgl64.Vec2{}
 	separation := mgl64.Vec2{}
 	for _, ob := range *boids {
-		distance := Distance(b.Position, ob.Position)
+		distance := vecmath.Distance(b.Position, ob.Position)
 		if ob.id != b.id && distance < float64(Perception) {
 			// Alignment
 			alignment = alignment.Add(ob.Velocity)
@@ -57,7 +58,7 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 
 			// Separation
 			diff := b.Position.Sub(ob.Position)
-			diff = Div(diff, distance)
+			diff = vecmath.Div(diff, distance)
 			separation = separation.Add(diff)
 			total++
 		}
@@ -65,23 +66,23 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 
 	if total > 0 {
 		// Alignment
-		alignment = Div(alignment, float64(total))
-		alignment = SetMag(alignment, MaxSpeed)
+		alignment = vecmath.Div(alignment, float64(total))
+		alignment = vecmath.SetMag(alignment, MaxSpeed)
 		alignment = alignment.Sub(b.Velocity)
-		alignment = Limit(alignment, MaxForce)
+		alignment = vecmath.Limit(alignment, MaxForce)
 
 		// Cohesion
-		cohesion = Div(cohesion, float64(total))
+		cohesion = vecmath.Div(cohesion, float64(total))
 		cohesion = cohesion.Sub(b.Position)
-		cohesion = SetMag(cohesion, MaxSpeed)
+		cohesion = vecmath.SetMag(cohesion, MaxSpeed)
 		cohesion = cohesion.Sub(b.Velocity)
-		cohesion = Limit(cohesion, MaxForce)
+		cohesion = vecmath.Limit(cohesion, MaxForce)
 
 		// Separation
-		separation = Div(separation, float64(total))
-		separation = SetMag(separation, MaxSpeed)
+		separation = vecmath.Div(separation, float64(total))
+		separation = vecmath.SetMag(separation, MaxSpeed)
 		separation = separation.Sub(b.Velocity)
-		separation = Limit(separation, MaxForce)
+		separation = vecmath.Limit(separation, MaxForce)
 	}
 
 	// Add them all up to get the final acceleration force
@@ -97,6 +98,6 @@ func (b *Boid) Flock(boids *[]*Boid) {
 func (b *Boid) Update() {
 	b.Position = b.Position.Add(b.Velocity)
 	b.Velocity = b.Velocity.Add(b.Acceleration)
-	b.Velocity = Limit(b.Velocity, MaxSpeed)
+	b.Velocity = vecmath.Limit(b.Velocity, MaxSpeed)
 	b.Acceleration = b.Acceleration.Mul(0)
 }
