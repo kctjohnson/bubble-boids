@@ -1,4 +1,4 @@
-package vecmath
+package mathutil
 
 import (
 	"math"

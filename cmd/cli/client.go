@@ -8,7 +8,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
-	"github.com/kctjohnson/bubble-boids/internal/vecmath"
+	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"golang.org/x/term"
 )
 
@@ -18,7 +18,7 @@ type model struct {
 	screen         *Screen
 	virtualScreen  *VirtualScreen
 	boids          *[]*boid.Boid
-	scatterCounter int // Starts at 0, when it hits 500, all of the boids are scattered
+	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
 
 func initialModel() model {
@@ -48,8 +48,8 @@ func (m model) Frame() (tea.Model, tea.Cmd) {
 	for _, b := range *m.boids {
 		if m.scatterCounter >= boid.ScatterCounterCap {
 			// Randomize velocity and acceleration
-			b.Velocity = vecmath.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
-			b.Acceleration = vecmath.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
+			b.Velocity = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
+			b.Acceleration = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
 		} else {
 			b.Edges(m.screen.Width, m.screen.Height)
 			b.Flock(m.boids)
