@@ -1,26 +1,25 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
 
-	"github.com/kctjohnson/bubble-boids/internal/boid"
 )
 
-// Virtual screen is made based on the size of the terminal screen in rows and columns.
-// The virtual screen will be TERM_RATIO times taller than the main screen, since the
-// terminal characters are taller than they are wide (generally)
-
-// First step will be to get the ratio of the terminal
-// Next step will be to create a sceen at least VIRTUAL_SCREEN_WIDTH wide,
-// 	then get the height based on the ratio, multiplied by TERM_RATIO
-// The boids will operate inside of the virtual screen dimensions,
-// 	then be rendered down into the terminal screen on draw
-
 type VirtualScreen struct {
-	Width  int
-	Height int
-	Zoom   float64 // defaults to 1, TODO: eventually add this functionality
+	Width  float64 // Working with floats since the conversion between terminal
+	Height float64 // to virtual won't always result in round numbers
+}
+
+func NewVirtualScreen(width int, height int) *VirtualScreen {
+	var newVirtualScreen = new(VirtualScreen)
+	newVirtualScreen.Width = VirtScreenWidth
+	newVirtualScreen.Height = (newVirtualScreen.Width / float64(width) * float64(height)) * TermRatio
+	return newVirtualScreen
+}
+
+func (vs *VirtualScreen) UpdateScreenSize(width int, height int) {
+	vs.Width = VirtScreenWidth
+	vs.Height = (vs.Width / float64(width) * float64(height)) * TermRatio
 }
 
 type Screen struct {
@@ -46,7 +45,6 @@ func (s Screen) GetScreen() string {
 		}
 		finalScreen += "\n"
 	}
-	finalScreen += fmt.Sprintf("Max Force: %f | Max Speed: %f | Boid Qty: %d", boid.MaxForce, boid.MaxSpeed, boid.BoidCount)
 	return strings.Trim(finalScreen, "\n")
 }
 

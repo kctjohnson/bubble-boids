@@ -14,12 +14,12 @@ type Boid struct {
 	Acceleration mgl64.Vec2
 }
 
-func NewBoid(id int, screenWidth int, screenHeight int) *Boid {
+func NewBoid(id int, screenWidth float64, screenHeight float64) *Boid {
 	newBoid := new(Boid)
 	newBoid.id = id
 	newBoid.Position = mgl64.Vec2{
-		rand.Float64() * float64(screenWidth),
-		rand.Float64() * float64(screenHeight),
+		rand.Float64() * screenWidth,
+		rand.Float64() * screenHeight,
 	}
 	newBoid.Velocity = mgl64.Vec2{rand.Float64(), rand.Float64()}
 	newBoid.Velocity = mathutil.SetMag(newBoid.Velocity, rand.Float64()*8-4) // 2 to 4
@@ -28,17 +28,17 @@ func NewBoid(id int, screenWidth int, screenHeight int) *Boid {
 }
 
 // Makes sure the boid can't go outside the bounds of the screen
-func (b *Boid) Edges(screenWidth int, screenHeight int) {
-	if b.Position.X() > float64(screenWidth) {
+func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
+	if b.Position.X() > screenWidth {
 		b.Position[0] = 0
 	} else if b.Position.X() < 0 {
-		b.Position[0] = float64(screenWidth)
+		b.Position[0] = screenWidth
 	}
 
-	if b.Position.Y() > float64(screenHeight) {
+	if b.Position.Y() > screenHeight {
 		b.Position[1] = 0
 	} else if b.Position.Y() < 0 {
-		b.Position[1] = float64(screenHeight)
+		b.Position[1] = screenHeight
 	}
 }
 

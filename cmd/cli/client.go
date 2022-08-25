@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"math"
 	"math/rand"
 	"os"
 	"time"
@@ -31,6 +32,7 @@ func InitialModel() Model {
 	*newBoidSlice = make([]*boid.Boid, 0)
 
 	return Model{
+		virtualScreen:  NewVirtualScreen(width, height),
 		screen:         NewScreen(width, height),
 		boids:          newBoidSlice,
 		scatterCounter: 0,
@@ -51,7 +53,7 @@ func (m Model) Frame() (tea.Model, tea.Cmd) {
 			b.Velocity = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
 			b.Acceleration = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
 		} else {
-			b.Edges(m.screen.Width, m.screen.Height)
+			b.Edges(m.virtualScreen.Width, m.virtualScreen.Height)
 			b.Flock(m.boids)
 		}
 		b.Update()
@@ -66,7 +68,7 @@ func (m Model) Frame() (tea.Model, tea.Cmd) {
 func (m Model) Init() tea.Cmd {
 	numberOfBoids := boid.BoidCount
 	for i := 0; i < numberOfBoids; i++ {
-		*m.boids = append(*m.boids, boid.NewBoid(i, m.screen.Width, m.screen.Height))
+		*m.boids = append(*m.boids, boid.NewBoid(i, m.virtualScreen.Width, m.virtualScreen.Height))
 	}
 	return m.tick()
 }
@@ -76,6 +78,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TickMsg:
 		return m.Frame()
 	case tea.WindowSizeMsg:
+		// Update both the main screen, and the virtual screen
+		m.virtualScreen.UpdateScreenSize(msg.Width, msg.Height)
 		m.screen.UpdateScreenSize(msg.Width, msg.Height)
 		return m, nil
 	case tea.KeyMsg:
@@ -91,21 +95,22 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	m.screen.Clear()
 	for _, b := range *m.boids {
-		posX := int(b.Position.X())
-		posY := int(b.Position.Y())
-		if posX >= m.screen.Width {
-			posX = m.screen.Width - 1
+		// Convert the current virtual boid position to a terminal coordinate
+		termX := int(math.Floor(float64(m.screen.Width) / m.virtualScreen.Width * b.Position.X()))
+		termY := int(math.Floor(float64(m.screen.Height) / m.virtualScreen.Height * b.Position.Y()))
+		if termX >= m.screen.Width {
+			termX = m.screen.Width - 1
 		}
-		if posY >= m.screen.Height {
-			posY = m.screen.Height - 1
+		if termY >= m.screen.Height {
+			termY = m.screen.Height - 1
 		}
-		if posX < 0 {
-			posX = 0
+		if termX < 0 {
+			termX = 0
 		}
-		if posY < 0 {
-			posY = 0
+		if termY < 0 {
+			termY = 0
 		}
-		m.screen.SetRune(posX, posY/boid.TermRatio, '*')
+		m.screen.SetRune(termX, termY, '*')
 	}
 	return m.screen.GetScreen()
 }
