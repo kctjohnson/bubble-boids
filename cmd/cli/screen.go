@@ -20,7 +20,7 @@ import (
 type VirtualScreen struct {
 	Width  int
 	Height int
-	Zoom   float64
+	Zoom   float64 // defaults to 1, TODO: eventually add this functionality
 }
 
 type Screen struct {
