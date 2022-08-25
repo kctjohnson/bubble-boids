@@ -42,80 +42,58 @@ func (b *Boid) Edges(screenWidth int, screenHeight int) {
 	}
 }
 
-func (b Boid) Align(boids *[]*Boid) mgl64.Vec2 {
-	steering := mgl64.Vec2{}
+func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 	total := 0
+	alignment := mgl64.Vec2{}
+	cohesion := mgl64.Vec2{}
+	separation := mgl64.Vec2{}
 	for _, ob := range *boids {
-		d := utils.Distance(b.Position, ob.Position)
-		if ob.id != b.id && d < float64(utils.Perception) {
-			steering = steering.Add(ob.Velocity)
-			total++
-		}
-	}
+		distance := utils.Distance(b.Position, ob.Position)
+		if ob.id != b.id && distance < float64(utils.Perception) {
+			// Alignment
+			alignment = alignment.Add(ob.Velocity)
+			
+			// Cohesion
+			cohesion = cohesion.Add(ob.Position)
 
-	if total > 0 {
-		steering = utils.Div(steering, float64(total))
-		steering = utils.SetMag(steering, utils.MaxSpeed)
-		steering = steering.Sub(b.Velocity)
-		steering = utils.Limit(steering, utils.MaxForce)
-	}
-
-	return steering
-}
-
-func (b Boid) Cohesion(boids *[]*Boid) mgl64.Vec2 {
-	steering := mgl64.Vec2{}
-	total := 0
-	for _, ob := range *boids {
-		d := utils.Distance(b.Position, ob.Position)
-		if ob.id != b.id && d < float64(utils.Perception) {
-			steering = steering.Add(ob.Position)
-			total++
-		}
-	}
-
-	if total > 0 {
-		steering = utils.Div(steering, float64(total))
-		steering = steering.Sub(b.Position)
-		steering = utils.SetMag(steering, utils.MaxSpeed)
-		steering = steering.Sub(b.Velocity)
-		steering = utils.Limit(steering, utils.MaxForce)
-	}
-
-	return steering
-}
-
-func (b Boid) Separation(boids *[]*Boid) mgl64.Vec2 {
-	steering := mgl64.Vec2{}
-	total := 0
-	for _, ob := range *boids {
-		d := utils.Distance(b.Position, ob.Position)
-		if ob.id != b.id && d < float64(utils.Perception) {
+			// Separation
 			diff := b.Position.Sub(ob.Position)
-			diff = utils.Div(diff, d)
-			steering = steering.Add(diff)
+			diff = utils.Div(diff, distance)
+			separation = separation.Add(diff)
 			total++
 		}
 	}
 
 	if total > 0 {
-		steering = utils.Div(steering, float64(total))
-		steering = utils.SetMag(steering, utils.MaxSpeed)
-		steering = steering.Sub(b.Velocity)
-		steering = utils.Limit(steering, utils.MaxForce)
+		// Alignment
+		alignment = utils.Div(alignment, float64(total))
+		alignment = utils.SetMag(alignment, utils.MaxSpeed)
+		alignment = alignment.Sub(b.Velocity)
+		alignment = utils.Limit(alignment, utils.MaxForce)
+
+		// Cohesion
+		cohesion = utils.Div(cohesion, float64(total))
+		cohesion = cohesion.Sub(b.Position)
+		cohesion = utils.SetMag(cohesion, utils.MaxSpeed)
+		cohesion = cohesion.Sub(b.Velocity)
+		cohesion = utils.Limit(cohesion, utils.MaxForce)
+
+		// Separation
+		separation = utils.Div(separation, float64(total))
+		separation = utils.SetMag(separation, utils.MaxSpeed)
+		separation = separation.Sub(b.Velocity)
+		separation = utils.Limit(separation, utils.MaxForce)
 	}
 
-	return steering
+	// Add them all up to get the final acceleration force
+	force := alignment.Add(cohesion).Add(separation)
+	return force
 }
 
 func (b *Boid) Flock(boids *[]*Boid) {
-	alignment := b.Align(boids)
-	cohesion := b.Cohesion(boids)
-	separation := b.Separation(boids)
+	force := b.BoidLogic(boids)
 
-	b.Acceleration = b.Acceleration.Add(alignment)
-	b.Acceleration = b.Acceleration.Add(cohesion)
-	b.Acceleration = b.Acceleration.Add(separation)
+	b.Acceleration = b.Acceleration.Add(force)
 }
 
 func (b *Boid) Update() {
