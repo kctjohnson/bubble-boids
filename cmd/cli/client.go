@@ -2,9 +2,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/kctjohnson/bubble-boids/cmd/cli/boid"
-	"github.com/kctjohnson/bubble-boids/cmd/cli/screen"
-	"github.com/kctjohnson/bubble-boids/cmd/cli/utils"
 	"math/rand"
 	"os"
 	"time"
@@ -16,9 +13,9 @@ import (
 type TickMsg time.Time
 
 type model struct {
-	screen         *screen.Screen
-	virtualScreen  *screen.VirtualScreen
-	boids          *[]*boid.Boid
+	screen         *Screen
+	virtualScreen  *VirtualScreen
+	boids          *[]*Boid
 	scatterCounter int // Starts at 0, when it hits 500, all of the boids are scattered
 }
 
@@ -28,11 +25,11 @@ func initialModel() model {
 		panic("Yikes")
 	}
 
-	newBoidSlice := new([]*boid.Boid)
-	*newBoidSlice = make([]*boid.Boid, 0)
+	newBoidSlice := new([]*Boid)
+	*newBoidSlice = make([]*Boid, 0)
 
 	return model{
-		screen:         screen.NewScreen(width, height),
+		screen:         NewScreen(width, height),
 		boids:          newBoidSlice,
 		scatterCounter: 0,
 	}
@@ -47,10 +44,10 @@ func (m model) tick() tea.Cmd {
 func (m model) Frame() (tea.Model, tea.Cmd) {
 	m.scatterCounter++
 	for _, b := range *m.boids {
-		if m.scatterCounter >= utils.ScatterCounterCap {
+		if m.scatterCounter >= ScatterCounterCap {
 			// Randomize velocity and acceleration
-			b.Velocity = utils.RandomVec2(-utils.MaxSpeed, utils.MaxSpeed)
-			b.Acceleration = utils.RandomVec2(-utils.MaxSpeed, utils.MaxSpeed)
+			b.Velocity = RandomVec2(-MaxSpeed, MaxSpeed)
+			b.Acceleration = RandomVec2(-MaxSpeed, MaxSpeed)
 		} else {
 			b.Edges(m.screen.Width, m.screen.Height)
 			b.Flock(m.boids)
@@ -58,16 +55,16 @@ func (m model) Frame() (tea.Model, tea.Cmd) {
 		b.Update()
 	}
 
-	if m.scatterCounter >= utils.ScatterCounterCap {
+	if m.scatterCounter >= ScatterCounterCap {
 		m.scatterCounter = 0
 	}
 	return m, m.tick()
 }
 
 func (m model) Init() tea.Cmd {
-	numberOfBoids := utils.BoidCount
+	numberOfBoids := BoidCount
 	for i := 0; i < numberOfBoids; i++ {
-		*m.boids = append(*m.boids, boid.NewBoid(i, m.screen.Width, m.screen.Height))
+		*m.boids = append(*m.boids, NewBoid(i, m.screen.Width, m.screen.Height))
 	}
 	return m.tick()
 }
@@ -106,7 +103,7 @@ func (m model) View() string {
 		if posY < 0 {
 			posY = 0
 		}
-		m.screen.SetRune(posX, posY/utils.TermRatio, '*')
+		m.screen.SetRune(posX, posY/TermRatio, '*')
 	}
 	return m.screen.GetScreen()
 }

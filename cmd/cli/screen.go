@@ -1,10 +1,25 @@
-package screen
+package cli
 
 import (
 	"fmt"
-	"github.com/kctjohnson/bubble-boids/cmd/cli/utils"
 	"strings"
 )
+
+// Virtual screen is made based on the size of the terminal screen in rows and columns.
+// The virtual screen will be TERM_RATIO times taller than the main screen, since the
+// terminal characters are taller than they are wide (generally)
+
+// First step will be to get the ratio of the terminal
+// Next step will be to create a sceen at least VIRTUAL_SCREEN_WIDTH wide,
+// 	then get the height based on the ratio, multiplied by TERM_RATIO
+// The boids will operate inside of the virtual screen dimensions,
+// 	then be rendered down into the terminal screen on draw
+
+type VirtualScreen struct {
+	Width  int
+	Height int
+	Zoom   float64
+}
 
 type Screen struct {
 	Runes  []rune
@@ -29,7 +44,7 @@ func (s Screen) GetScreen() string {
 		}
 		finalScreen += "\n"
 	}
-	finalScreen += fmt.Sprintf("Max Force: %f | Max Speed: %f | Boid Qty: %d", utils.MaxForce, utils.MaxSpeed, utils.BoidCount)
+	finalScreen += fmt.Sprintf("Max Force: %f | Max Speed: %f | Boid Qty: %d", MaxForce, MaxSpeed, BoidCount)
 	return strings.Trim(finalScreen, "\n")
 }
 
