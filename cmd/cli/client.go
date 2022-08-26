@@ -28,12 +28,7 @@ type Model struct {
 	viewStyle      lipgloss.Style
 }
 
-func InitialModel() Model {
-	width, height, err := term.GetSize(0)
-	if err != nil {
-		panic("Yikes")
-	}
-
+func InitialModel(width int, height int) Model {
 	newBoidSlice := new([]*boid.Boid)
 	*newBoidSlice = make([]*boid.Boid, 0)
 
@@ -183,7 +178,13 @@ func (m Model) View() string {
 
 func Execute() {
 	rand.Seed(time.Now().UTC().UnixNano())
-	p := tea.NewProgram(InitialModel(), tea.WithAltScreen())
+
+	width, height, err := term.GetSize(0)
+	if err != nil {
+		panic("Yikes")
+	}
+
+	p := tea.NewProgram(InitialModel(width, height), tea.WithAltScreen())
 	if err := p.Start(); err != nil {
 		fmt.Printf("Alas, there's been an error: %v", err)
 		os.Exit(1)

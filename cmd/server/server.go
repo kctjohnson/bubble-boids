@@ -54,12 +54,12 @@ func Execute() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
-	_, _, active := s.Pty()
+	termInfo, _, active := s.Pty()
 	if !active {
 		wish.Fatalln(s, "no active terminal, skipping")
 		return nil, nil
 	}
 
-	m := cli.InitialModel()
-	return m, []tea.ProgramOption{tea.WithAltScreen()}
+	m := cli.InitialModel(termInfo.Window.Width, termInfo.Window.Height)
+	return m, []tea.ProgramOption{tea.WithInput(s), tea.WithOutput(s), tea.WithAltScreen()}
 }
