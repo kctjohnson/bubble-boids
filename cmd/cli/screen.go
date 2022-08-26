@@ -1,10 +1,7 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
-
-	"github.com/kctjohnson/bubble-boids/internal/boid"
 )
 
 type VirtualScreen struct {
@@ -47,7 +44,6 @@ func (s Screen) GetScreen() string {
 		}
 		finalScreen += "\n"
 	}
-	finalScreen += fmt.Sprintf("Alignment: %f | Cohesion: %f | Separation: %f | Perception: %d | Speed: %f", boid.MaxAlignmentForce, boid.MaxCohesionForce, boid.MaxSeparationForce, boid.Perception, boid.MaxSpeed)
 	return strings.Trim(finalScreen, "\n")
 }
 

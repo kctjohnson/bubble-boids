@@ -20,8 +20,8 @@ type keyMap struct {
 	IncreaseMaxSpeed   key.Binding
 	DecreaseMaxSpeed   key.Binding
 	Scatter            key.Binding
-	Help               key.Binding
-	Quit               key.Binding
+
+	Quit key.Binding
 }
 
 func (k keyMap) ShortHelp() []key.Binding {
@@ -33,7 +33,6 @@ func (k keyMap) ShortHelp() []key.Binding {
 		k.ModifyMaxSpeed,
 		k.Scatter,
 		k.Quit,
-		k.Help,
 	}
 }
 
@@ -46,18 +45,17 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.IncreaseMaxSpeed, k.DecreaseMaxSpeed},
 		{k.Scatter},
 		{k.Quit},
-		{k.Help},
 	}
 }
 
 var keys = keyMap{
 	ModifyAlignment:    key.NewBinding(key.WithKeys("a", "z"), key.WithHelp("a/z", "Modify Alignment")),
-	ModifyCohesion:    key.NewBinding(key.WithKeys("s", "x"), key.WithHelp("s/x", "Modify Cohesion")),
-	ModifySeparation:    key.NewBinding(key.WithKeys("d", "c"), key.WithHelp("d/c", "Modify Separation")),
-	ModifyPerception:    key.NewBinding(key.WithKeys("f", "v"), key.WithHelp("f/v", "Modify Perception")),
-	ModifyMaxSpeed:    key.NewBinding(key.WithKeys("g", "b"), key.WithHelp("g/b", "Modify MaxSpeed")),
-	IncreaseAlignment:   key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "Increase Alignment")),
-	DecreaseAlignment:   key.NewBinding(key.WithKeys("z"), key.WithHelp("z", "Decrease Alignment")),
+	ModifyCohesion:     key.NewBinding(key.WithKeys("s", "x"), key.WithHelp("s/x", "Modify Cohesion")),
+	ModifySeparation:   key.NewBinding(key.WithKeys("d", "c"), key.WithHelp("d/c", "Modify Separation")),
+	ModifyPerception:   key.NewBinding(key.WithKeys("f", "v"), key.WithHelp("f/v", "Modify Perception")),
+	ModifyMaxSpeed:     key.NewBinding(key.WithKeys("g", "b"), key.WithHelp("g/b", "Modify MaxSpeed")),
+	IncreaseAlignment:  key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "Increase Alignment")),
+	DecreaseAlignment:  key.NewBinding(key.WithKeys("z"), key.WithHelp("z", "Decrease Alignment")),
 	IncreaseCohesion:   key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "Increase Cohesion")),
 	DecreaseCohesion:   key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "Decrease Cohesion")),
 	IncreaseSeparation: key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "Increase Separation")),
@@ -68,5 +66,4 @@ var keys = keyMap{
 	DecreaseMaxSpeed:   key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "Decrease Max Speed")),
 	Scatter:            key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "Scatter Boids")),
 	Quit:               key.NewBinding(key.WithKeys("q", "esc", "ctrl+c"), key.WithHelp("q", "Quit")),
-	Help:               key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "Toggle Help")),
 }

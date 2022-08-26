@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"golang.org/x/term"
@@ -24,6 +25,7 @@ type Model struct {
 	virtualScreen  *VirtualScreen
 	boids          *[]*boid.Boid
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
+	viewStyle      lipgloss.Style
 }
 
 func InitialModel() Model {
@@ -36,17 +38,18 @@ func InitialModel() Model {
 	*newBoidSlice = make([]*boid.Boid, 0)
 
 	return Model{ // Subtract the help height to make space for the help UI
-		virtualScreen:  NewVirtualScreen(width, height-HelpHeight),
-		screen:         NewScreen(width, height-HelpHeight),
+		virtualScreen:  NewVirtualScreen(width-BorderPadding, height-HelpHeight-BorderPadding),
+		screen:         NewScreen(width-BorderPadding, height-HelpHeight-BorderPadding),
 		boids:          newBoidSlice,
 		scatterCounter: 0,
 		keys:           keys,
 		help:           help.New(),
+		viewStyle:      lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#ffffff")),
 	}
 }
 
 func (m Model) tick() tea.Cmd {
-	return tea.Tick(time.Second/60, func(t time.Time) tea.Msg {
+	return tea.Tick(time.Second/FPS, func(t time.Time) tea.Msg {
 		return TickMsg(t)
 	})
 }
@@ -87,8 +90,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.help.Width = msg.Width
 
 		// Update both the main screen, and the virtual screen
-		m.virtualScreen.UpdateScreenSize(msg.Width, msg.Height-HelpHeight)
-		m.screen.UpdateScreenSize(msg.Width, msg.Height-HelpHeight)
+		m.virtualScreen.UpdateScreenSize(msg.Width-BorderPadding, msg.Height-HelpHeight-BorderPadding)
+		m.screen.UpdateScreenSize(msg.Width-BorderPadding, msg.Height-HelpHeight-BorderPadding)
 		return m, nil
 	case tea.KeyMsg:
 		switch {
@@ -140,8 +143,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Scatter):
 			m.scatterCounter = boid.ScatterCounterCap
 
-		case key.Matches(msg, m.keys.Help):
-			m.help.ShowAll = !m.help.ShowAll
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
@@ -152,6 +153,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) View() string {
 	m.screen.Clear()
+
 	for _, b := range *m.boids {
 		// Convert the current virtual boid position to a terminal coordinate
 		termX := int(math.Floor(float64(m.screen.Width) / m.virtualScreen.Width * b.Position.X()))
@@ -170,7 +172,13 @@ func (m Model) View() string {
 		}
 		m.screen.SetRune(termX, termY, '*')
 	}
-	return m.screen.GetScreen() + "\n" + m.help.View(m.keys)
+
+	screen := m.screen.GetScreen()
+	screenView := m.viewStyle.Render(screen)
+	screenView += fmt.Sprintf("\nAlignment: %f | Cohesion: %f | Separation: %f | Perception: %d | Speed: %f", boid.MaxAlignmentForce, boid.MaxCohesionForce, boid.MaxSeparationForce, boid.Perception, boid.MaxSpeed)
+	screenView += "\n" + m.help.View(m.keys)
+
+	return screenView
 }
 
 func Execute() {
