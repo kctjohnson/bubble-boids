@@ -8,8 +8,8 @@ import (
 )
 
 func RandomVec2(min float64, max float64) mgl64.Vec2 {
-	x := rand.Float64() * (max - min) + min
-	y := rand.Float64() * (max - min) + min
+	x := RandRange(min, max)
+	y := RandRange(min, max)
 	return mgl64.Vec2{x, y}
 }
 
@@ -47,4 +47,8 @@ func Limit(vec mgl64.Vec2, max float64) mgl64.Vec2 {
 		vec = vec.Mul(max)
 	}
 	return vec
+}
+
+func RandRange(min float64, max float64) float64 {
+	return rand.Float64() * (max - min) + min
 }

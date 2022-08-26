@@ -22,7 +22,7 @@ func NewBoid(id int, screenWidth float64, screenHeight float64) *Boid {
 		rand.Float64() * screenHeight,
 	}
 	newBoid.Velocity = mgl64.Vec2{rand.Float64(), rand.Float64()}
-	newBoid.Velocity = mathutil.SetMag(newBoid.Velocity, rand.Float64()*8-4) // 2 to 4
+	newBoid.Velocity = mathutil.SetMag(newBoid.Velocity, mathutil.RandRange(-MaxSpeed, MaxSpeed))
 	newBoid.Acceleration = mgl64.Vec2{0.0, 0.0}
 	return newBoid
 }
