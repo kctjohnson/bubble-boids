@@ -7,9 +7,10 @@ require github.com/charmbracelet/wish v0.5.0
 require (
 	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/caarlos0/sshmarshal v0.1.0 // indirect
+	github.com/charmbracelet/bubbles v0.13.0 // indirect
 	github.com/charmbracelet/bubbletea v0.22.1 // indirect
 	github.com/charmbracelet/keygen v0.3.0 // indirect
-	github.com/charmbracelet/lipgloss v0.4.0 // indirect
+	github.com/charmbracelet/lipgloss v0.5.0 // indirect
 	github.com/containerd/console v1.0.3 // indirect
 	github.com/gliderlabs/ssh v0.3.4 // indirect
 	github.com/go-gl/mathgl v1.0.0 // indirect

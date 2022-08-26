@@ -69,20 +69,20 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 		alignment = mathutil.Div(alignment, float64(total))
 		alignment = mathutil.SetMag(alignment, MaxSpeed)
 		alignment = alignment.Sub(b.Velocity)
-		alignment = mathutil.Limit(alignment, MaxForce)
+		alignment = mathutil.Limit(alignment, MaxAlignmentForce)
 
 		// Cohesion
 		cohesion = mathutil.Div(cohesion, float64(total))
 		cohesion = cohesion.Sub(b.Position)
 		cohesion = mathutil.SetMag(cohesion, MaxSpeed)
 		cohesion = cohesion.Sub(b.Velocity)
-		cohesion = mathutil.Limit(cohesion, MaxForce)
+		cohesion = mathutil.Limit(cohesion, MaxCohesionForce)
 
 		// Separation
 		separation = mathutil.Div(separation, float64(total))
 		separation = mathutil.SetMag(separation, MaxSpeed)
 		separation = separation.Sub(b.Velocity)
-		separation = mathutil.Limit(separation, MaxForce)
+		separation = mathutil.Limit(separation, MaxSeparationForce)
 	}
 
 	// Add them all up to get the final acceleration force

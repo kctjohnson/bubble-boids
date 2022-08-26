@@ -2,8 +2,11 @@ package boid
 
 const (
 	BoidCount         = 300
-	MaxForce          = 0.3
-	MaxSpeed          = 2.5
-	Perception        = 30
 	ScatterCounterCap = 600
 )
+
+var MaxAlignmentForce = 0.3
+var MaxCohesionForce = 0.3
+var MaxSeparationForce = 0.3
+var MaxSpeed = 2.5
+var Perception = 30

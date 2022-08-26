@@ -7,6 +7,8 @@ import (
 	"os"
 	"time"
 
+	"github.com/charmbracelet/bubbles/help"
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
@@ -16,6 +18,8 @@ import (
 type TickMsg time.Time
 
 type Model struct {
+	keys           keyMap
+	help           help.Model
 	screen         *Screen
 	virtualScreen  *VirtualScreen
 	boids          *[]*boid.Boid
@@ -31,11 +35,13 @@ func InitialModel() Model {
 	newBoidSlice := new([]*boid.Boid)
 	*newBoidSlice = make([]*boid.Boid, 0)
 
-	return Model{
-		virtualScreen:  NewVirtualScreen(width, height),
-		screen:         NewScreen(width, height),
+	return Model{ // Subtract the help height to make space for the help UI
+		virtualScreen:  NewVirtualScreen(width, height-HelpHeight),
+		screen:         NewScreen(width, height-HelpHeight),
 		boids:          newBoidSlice,
 		scatterCounter: 0,
+		keys:           keys,
+		help:           help.New(),
 	}
 }
 
@@ -78,13 +84,65 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case TickMsg:
 		return m.Frame()
 	case tea.WindowSizeMsg:
+		m.help.Width = msg.Width
+
 		// Update both the main screen, and the virtual screen
-		m.virtualScreen.UpdateScreenSize(msg.Width, msg.Height)
-		m.screen.UpdateScreenSize(msg.Width, msg.Height)
+		m.virtualScreen.UpdateScreenSize(msg.Width, msg.Height-HelpHeight)
+		m.screen.UpdateScreenSize(msg.Width, msg.Height-HelpHeight)
 		return m, nil
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "ctrl+c", "q":
+		switch {
+		case key.Matches(msg, m.keys.ModifyAlignment):
+			if key.Matches(msg, m.keys.IncreaseAlignment) {
+				boid.MaxAlignmentForce += 0.1
+			} else {
+				if boid.MaxAlignmentForce > 0.0 {
+					boid.MaxAlignmentForce -= 0.1
+				}
+			}
+
+		case key.Matches(msg, m.keys.ModifyCohesion):
+			if key.Matches(msg, m.keys.IncreaseCohesion) {
+				boid.MaxCohesionForce += 0.1
+			} else {
+				if boid.MaxCohesionForce > 0.0 {
+					boid.MaxCohesionForce -= 0.1
+				}
+			}
+
+		case key.Matches(msg, m.keys.ModifySeparation):
+			if key.Matches(msg, m.keys.IncreaseSeparation) {
+				boid.MaxSeparationForce += 0.1
+			} else {
+				if boid.MaxSeparationForce > 0.0 {
+					boid.MaxSeparationForce -= 0.1
+				}
+			}
+
+		case key.Matches(msg, m.keys.ModifyPerception):
+			if key.Matches(msg, m.keys.IncreasePerception) {
+				boid.Perception += 1
+			} else {
+				if boid.Perception > 0.0 {
+					boid.Perception -= 1
+				}
+			}
+
+		case key.Matches(msg, m.keys.ModifyMaxSpeed):
+			if key.Matches(msg, m.keys.IncreaseMaxSpeed) {
+				boid.MaxSpeed += 0.1
+			} else {
+				if boid.MaxSpeed > 0.0 {
+					boid.MaxSpeed -= 0.1
+				}
+			}
+
+		case key.Matches(msg, m.keys.Scatter):
+			m.scatterCounter = boid.ScatterCounterCap
+
+		case key.Matches(msg, m.keys.Help):
+			m.help.ShowAll = !m.help.ShowAll
+		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}
 	}
@@ -112,7 +170,7 @@ func (m Model) View() string {
 		}
 		m.screen.SetRune(termX, termY, '*')
 	}
-	return m.screen.GetScreen()
+	return m.screen.GetScreen() + "\n" + m.help.View(m.keys)
 }
 
 func Execute() {
