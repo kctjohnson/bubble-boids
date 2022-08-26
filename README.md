@@ -1,6 +1,6 @@
 # TODO
 
-- Separate screen and virtual screen
+- ~Separate screen and virtual screen~
 - Implement view ratio (Zooming in and out)
 - Boid directional characters (maybe use unicode?) (> v < ^)
 - ~Optimize boid mechanisms so it's not iterating all boids 3 times per boid~

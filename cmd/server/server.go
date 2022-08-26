@@ -25,6 +25,7 @@ const (
 func Execute() {
 	s, err := wish.NewServer(
 		wish.WithAddress(fmt.Sprintf("%s:%d", host, port)),
+		wish.WithHostKeyPath(".ssh/bubble_boids_ed25519"),
 		wish.WithMiddleware(
 			bm.Middleware(teaHandler),
 			lm.Middleware(),
@@ -53,6 +54,12 @@ func Execute() {
 }
 
 func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	_, _, active := s.Pty()
+	if !active {
+		wish.Fatalln(s, "no active terminal, skipping")
+		return nil, nil
+	}
+
 	m := cli.InitialModel()
 	return m, []tea.ProgramOption{tea.WithAltScreen()}
 }
