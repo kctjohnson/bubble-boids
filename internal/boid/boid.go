@@ -1,7 +1,9 @@
 package boid
 
 import (
+	"math"
 	"math/rand"
+	"sort"
 
 	"github.com/go-gl/mathgl/mgl64"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
@@ -29,17 +31,30 @@ func NewBoid(id int, screenWidth float64, screenHeight float64) *Boid {
 
 // Makes sure the boid can't go outside the bounds of the screen
 func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
-	if b.Position.X() > screenWidth {
-		b.Position[0] = 0
-	} else if b.Position.X() < 0 {
-		b.Position[0] = screenWidth
+	// Used to check which way the boid needs to move
+	left := b.Position.X() < screenWidth/2
+	top := b.Position.Y() < screenHeight/2
+
+	// Get the heighest force being applies to the boid
+	forces := []float64{MaxAlignmentForce, MaxCohesionForce, MaxSeparationForce, MaxSpeed}
+	sort.Slice(forces, func(i, j int) bool { return forces[i] < forces[j] })
+	heighestForce := forces[0] * 10
+
+	// Calculate the opposite force vector that will move the boid away from the walls
+	var force mgl64.Vec2
+	if left {
+		force[0] = heighestForce / math.Max(b.Position.X(), 0.1)
+	} else {
+		force[0] = -(heighestForce / (screenWidth - math.Min(b.Position.X(), screenWidth - 1)))
 	}
 
-	if b.Position.Y() > screenHeight {
-		b.Position[1] = 0
-	} else if b.Position.Y() < 0 {
-		b.Position[1] = screenHeight
+	if top {
+		force[1] = heighestForce / math.Max(b.Position.Y(), 0.1)
+	} else {
+		force[1] = -(heighestForce / (screenHeight - math.Min(b.Position.Y(), screenHeight - 1)))
 	}
+
+	b.Acceleration = b.Acceleration.Add(force)
 }
 
 func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
@@ -52,7 +67,7 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 		if ob.id != b.id && distance < float64(Perception) {
 			// Alignment
 			alignment = alignment.Add(ob.Velocity)
-			
+
 			// Cohesion
 			cohesion = cohesion.Add(ob.Position)
 
