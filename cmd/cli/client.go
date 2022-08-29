@@ -114,6 +114,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case key.Matches(msg, m.keys.Scatter):
 			m.flock.Scatter()
 
+		case key.Matches(msg, m.keys.ToggleEdgeMode):
+			if m.flock.BoidSettings.EdgeMode == boid.EDGE_AVOID {
+				m.flock.BoidSettings.EdgeMode = boid.EDGE_WARP
+			} else {
+				m.flock.BoidSettings.EdgeMode = boid.EDGE_AVOID
+			}
+
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
 		}

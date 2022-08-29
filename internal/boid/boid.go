@@ -11,7 +11,7 @@ import (
 
 type Flock struct {
 	BoidSettings *BoidSettings
-	Boids          *[]*Boid
+	Boids        *[]*Boid
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -84,35 +84,49 @@ func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *Bo
 
 // Makes sure the boid can't go outside the bounds of the screen
 func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
-	// Used to check which way the boid needs to move
-	left := b.Position.X() < screenWidth/2
-	top := b.Position.Y() < screenHeight/2
+	if b.boidSettings.EdgeMode == EDGE_WARP {
+		if b.Position.X() > screenWidth {
+			b.Position[0] = 0
+		} else if b.Position.X() < 0 {
+			b.Position[0] = screenWidth
+		}
 
-	// Get the heighest force being applies to the boid
-	forces := []float64{
-		b.boidSettings.MaxAlignmentForce,
-		b.boidSettings.MaxCohesionForce,
-		b.boidSettings.MaxSeparationForce,
-		b.boidSettings.MaxSpeed,
+		if b.Position.Y() > screenHeight {
+			b.Position[1] = 0
+		} else if b.Position.Y() < 0 {
+			b.Position[1] = screenHeight
+		}
+	} else if b.boidSettings.EdgeMode == EDGE_AVOID {
+		// Used to check which way the boid needs to move
+		left := b.Position.X() < screenWidth/2
+		top := b.Position.Y() < screenHeight/2
+
+		// Get the heighest force being applies to the boid
+		forces := []float64{
+			b.boidSettings.MaxAlignmentForce,
+			b.boidSettings.MaxCohesionForce,
+			b.boidSettings.MaxSeparationForce,
+			b.boidSettings.MaxSpeed,
+		}
+		sort.Slice(forces, func(i, j int) bool { return forces[i] < forces[j] })
+		heighestForce := forces[0] * 10
+
+		// Calculate the opposite force vector that will move the boid away from the walls
+		var force mgl64.Vec2
+		if left {
+			force[0] = heighestForce / math.Max(b.Position.X(), 0.1)
+		} else {
+			force[0] = -(heighestForce / (screenWidth - math.Min(b.Position.X(), screenWidth-1)))
+		}
+
+		if top {
+			force[1] = heighestForce / math.Max(b.Position.Y(), 0.1)
+		} else {
+			force[1] = -(heighestForce / (screenHeight - math.Min(b.Position.Y(), screenHeight-1)))
+		}
+
+		b.Acceleration = b.Acceleration.Add(force)
 	}
-	sort.Slice(forces, func(i, j int) bool { return forces[i] < forces[j] })
-	heighestForce := forces[0] * 10
-
-	// Calculate the opposite force vector that will move the boid away from the walls
-	var force mgl64.Vec2
-	if left {
-		force[0] = heighestForce / math.Max(b.Position.X(), 0.1)
-	} else {
-		force[0] = -(heighestForce / (screenWidth - math.Min(b.Position.X(), screenWidth-1)))
-	}
-
-	if top {
-		force[1] = heighestForce / math.Max(b.Position.Y(), 0.1)
-	} else {
-		force[1] = -(heighestForce / (screenHeight - math.Min(b.Position.Y(), screenHeight-1)))
-	}
-
-	b.Acceleration = b.Acceleration.Add(force)
 }
 
 func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {

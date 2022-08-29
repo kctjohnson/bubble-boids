@@ -21,6 +21,8 @@ type keyMap struct {
 	DecreaseMaxSpeed   key.Binding
 	Scatter            key.Binding
 
+	ToggleEdgeMode key.Binding
+
 	Quit key.Binding
 }
 
@@ -32,6 +34,7 @@ func (k keyMap) ShortHelp() []key.Binding {
 		k.ModifyPerception,
 		k.ModifyMaxSpeed,
 		k.Scatter,
+		k.ToggleEdgeMode,
 		k.Quit,
 	}
 }
@@ -43,7 +46,7 @@ func (k keyMap) FullHelp() [][]key.Binding {
 		{k.IncreaseSeparation, k.DecreaseSeparation},
 		{k.IncreasePerception, k.DecreasePerception},
 		{k.IncreaseMaxSpeed, k.DecreaseMaxSpeed},
-		{k.Scatter},
+		{k.Scatter, k.ToggleEdgeMode},
 		{k.Quit},
 	}
 }
@@ -65,5 +68,6 @@ var keys = keyMap{
 	IncreaseMaxSpeed:   key.NewBinding(key.WithKeys("g"), key.WithHelp("g", "Inc Max Speed")),
 	DecreaseMaxSpeed:   key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "Dec Max Speed")),
 	Scatter:            key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "Scatter")),
+	ToggleEdgeMode:            key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "Edge Mode")),
 	Quit:               key.NewBinding(key.WithKeys("q", "esc", "ctrl+c"), key.WithHelp("q", "Quit")),
 }
