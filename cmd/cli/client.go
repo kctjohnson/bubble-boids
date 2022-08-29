@@ -12,34 +12,29 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
-	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"golang.org/x/term"
 )
 
 type TickMsg time.Time
 
 type Model struct {
-	keys           keyMap
-	help           help.Model
-	screen         *Screen
-	virtualScreen  *VirtualScreen
-	boids          *[]*boid.Boid
-	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
-	viewStyle      lipgloss.Style
+	keys          keyMap
+	help          help.Model
+	screen        *Screen
+	virtualScreen *VirtualScreen
+	viewStyle     lipgloss.Style
+	flock         *boid.Flock
 }
 
 func InitialModel(width int, height int) Model {
-	newBoidSlice := new([]*boid.Boid)
-	*newBoidSlice = make([]*boid.Boid, 0)
-
+	newVirtualScreen := NewVirtualScreen(width-BorderPadding, height-HelpHeight-BorderPadding)
 	return Model{ // Subtract the help height to make space for the help UI
-		virtualScreen:  NewVirtualScreen(width-BorderPadding, height-HelpHeight-BorderPadding),
-		screen:         NewScreen(width-BorderPadding, height-HelpHeight-BorderPadding),
-		boids:          newBoidSlice,
-		scatterCounter: 0,
-		keys:           keys,
-		help:           help.New(),
-		viewStyle:      lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#ffffff")),
+		virtualScreen: newVirtualScreen,
+		screen:        NewScreen(width-BorderPadding, height-HelpHeight-BorderPadding),
+		flock:         boid.NewFlock(newVirtualScreen.Width, newVirtualScreen.Height),
+		keys:          keys,
+		help:          help.New(),
+		viewStyle:     lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(lipgloss.Color("#ffffff")),
 	}
 }
 
@@ -50,30 +45,11 @@ func (m Model) tick() tea.Cmd {
 }
 
 func (m Model) Frame() (tea.Model, tea.Cmd) {
-	m.scatterCounter++
-	for _, b := range *m.boids {
-		if m.scatterCounter >= boid.ScatterCounterCap {
-			// Randomize velocity and acceleration
-			b.Velocity = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
-			b.Acceleration = mathutil.RandomVec2(-boid.MaxSpeed, boid.MaxSpeed)
-		} else {
-			b.Edges(m.virtualScreen.Width, m.virtualScreen.Height)
-			b.Flock(m.boids)
-		}
-		b.Update()
-	}
-
-	if m.scatterCounter >= boid.ScatterCounterCap {
-		m.scatterCounter = 0
-	}
+	m.flock.Update(m.virtualScreen.Width, m.virtualScreen.Height)
 	return m, m.tick()
 }
 
 func (m Model) Init() tea.Cmd {
-	numberOfBoids := boid.BoidCount
-	for i := 0; i < numberOfBoids; i++ {
-		*m.boids = append(*m.boids, boid.NewBoid(i, m.virtualScreen.Width, m.virtualScreen.Height))
-	}
 	return m.tick()
 }
 
@@ -92,51 +68,58 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch {
 		case key.Matches(msg, m.keys.ModifyAlignment):
 			if key.Matches(msg, m.keys.IncreaseAlignment) {
-				boid.MaxAlignmentForce += 0.1
+				m.flock.BoidSettings.MaxAlignmentForce += 0.1
 			} else {
-				if boid.MaxAlignmentForce > 0.0 {
-					boid.MaxAlignmentForce -= 0.1
+				if m.flock.BoidSettings.MaxAlignmentForce > 0.0 {
+					m.flock.BoidSettings.MaxAlignmentForce -= 0.1
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifyCohesion):
 			if key.Matches(msg, m.keys.IncreaseCohesion) {
-				boid.MaxCohesionForce += 0.1
+				m.flock.BoidSettings.MaxCohesionForce += 0.1
 			} else {
-				if boid.MaxCohesionForce > 0.0 {
-					boid.MaxCohesionForce -= 0.1
+				if m.flock.BoidSettings.MaxCohesionForce > 0.0 {
+					m.flock.BoidSettings.MaxCohesionForce -= 0.1
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifySeparation):
 			if key.Matches(msg, m.keys.IncreaseSeparation) {
-				boid.MaxSeparationForce += 0.1
+				m.flock.BoidSettings.MaxSeparationForce += 0.1
 			} else {
-				if boid.MaxSeparationForce > 0.0 {
-					boid.MaxSeparationForce -= 0.1
+				if m.flock.BoidSettings.MaxSeparationForce > 0.0 {
+					m.flock.BoidSettings.MaxSeparationForce -= 0.1
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifyPerception):
 			if key.Matches(msg, m.keys.IncreasePerception) {
-				boid.Perception += 1
+				m.flock.BoidSettings.Perception += 1
 			} else {
-				if boid.Perception > 0.0 {
-					boid.Perception -= 1
+				if m.flock.BoidSettings.Perception > 0.0 {
+					m.flock.BoidSettings.Perception -= 1
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifyMaxSpeed):
 			if key.Matches(msg, m.keys.IncreaseMaxSpeed) {
-				boid.MaxSpeed += 0.1
+				m.flock.BoidSettings.MaxSpeed += 0.1
 			} else {
-				if boid.MaxSpeed > 0.0 {
-					boid.MaxSpeed -= 0.1
+				if m.flock.BoidSettings.MaxSpeed > 0.0 {
+					m.flock.BoidSettings.MaxSpeed -= 0.1
 				}
 			}
 
 		case key.Matches(msg, m.keys.Scatter):
-			m.scatterCounter = boid.ScatterCounterCap
+			m.flock.Scatter()
+
+		case key.Matches(msg, m.keys.ToggleEdgeMode):
+			if m.flock.BoidSettings.EdgeMode == boid.EDGE_AVOID {
+				m.flock.BoidSettings.EdgeMode = boid.EDGE_WARP
+			} else {
+				m.flock.BoidSettings.EdgeMode = boid.EDGE_AVOID
+			}
 
 		case key.Matches(msg, m.keys.Quit):
 			return m, tea.Quit
@@ -149,7 +132,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	m.screen.Clear()
 
-	for _, b := range *m.boids {
+	for _, b := range *m.flock.Boids {
 		// Convert the current virtual boid position to a terminal coordinate
 		termX := int(math.Floor(float64(m.screen.Width) / m.virtualScreen.Width * b.Position.X()))
 		termY := int(math.Floor(float64(m.screen.Height) / m.virtualScreen.Height * b.Position.Y()))
@@ -170,7 +153,7 @@ func (m Model) View() string {
 
 	screen := m.screen.GetScreen()
 	screenView := m.viewStyle.Render(screen)
-	screenView += fmt.Sprintf("\nAlignment: %f | Cohesion: %f | Separation: %f | Perception: %d | Speed: %f", boid.MaxAlignmentForce, boid.MaxCohesionForce, boid.MaxSeparationForce, boid.Perception, boid.MaxSpeed)
+	screenView += fmt.Sprintf("\nAlignment: %.1f | Cohesion: %.1f | Separation: %.1f | Perception: %d | Speed: %.1f", m.flock.BoidSettings.MaxAlignmentForce, m.flock.BoidSettings.MaxCohesionForce, m.flock.BoidSettings.MaxSeparationForce, m.flock.BoidSettings.Perception, m.flock.BoidSettings.MaxSpeed)
 	screenView += "\n" + m.help.View(m.keys)
 
 	return screenView
