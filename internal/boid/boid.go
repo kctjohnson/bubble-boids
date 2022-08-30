@@ -11,7 +11,7 @@ import (
 
 type Flock struct {
 	BoidSettings *BoidSettings
-	Boids        *[]*Boid
+	Boids        []Boid
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -21,11 +21,10 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 	newBoidSettings := NewBoidSettings()
 
 	// Create the flock slice and initialize each boid
-	newBoidSlice := new([]*Boid)
-	*newBoidSlice = make([]*Boid, 0)
+	newBoidSlice := make([]Boid, 0)
 	numberOfBoids := BoidCount
 	for i := 0; i < numberOfBoids; i++ {
-		*newBoidSlice = append(*newBoidSlice, NewBoid(i, screenWidth, screenHeight, newBoidSettings))
+		newBoidSlice = append(newBoidSlice, NewBoid(i, screenWidth, screenHeight, newBoidSettings))
 	}
 
 	return &Flock{
@@ -37,7 +36,7 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 	f.scatterCounter++
-	for _, b := range *f.Boids {
+	for i, b := range f.Boids {
 		if f.scatterCounter >= ScatterCounterCap {
 			// Randomize velocity and acceleration
 			b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
@@ -47,6 +46,7 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 			b.Flock(f.Boids)
 		}
 		b.Update()
+		f.Boids[i] = b
 	}
 
 	if f.scatterCounter >= ScatterCounterCap {
@@ -68,8 +68,8 @@ type Boid struct {
 	boidSettings *BoidSettings
 }
 
-func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *BoidSettings) *Boid {
-	newBoid := new(Boid)
+func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *BoidSettings) Boid {
+	newBoid := Boid{}
 	newBoid.id = id
 	newBoid.boidSettings = boidSettings
 	newBoid.Position = mgl64.Vec2{
@@ -128,12 +128,12 @@ func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
 	}
 }
 
-func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
+func (b Boid) BoidLogic(boids []Boid) mgl64.Vec2 {
 	total := 0
 	alignment := mgl64.Vec2{}
 	cohesion := mgl64.Vec2{}
 	separation := mgl64.Vec2{}
-	for _, ob := range *boids {
+	for _, ob := range boids {
 		distance := mathutil.Distance(b.Position, ob.Position)
 		if ob.id != b.id && distance < float64(b.boidSettings.Perception) {
 			// Alignment
@@ -176,7 +176,7 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 	return force
 }
 
-func (b *Boid) Flock(boids *[]*Boid) {
+func (b *Boid) Flock(boids []Boid) {
 	force := b.BoidLogic(boids)
 	b.Acceleration = b.Acceleration.Add(force)
 }
