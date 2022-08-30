@@ -106,9 +106,8 @@ func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
 			b.boidSettings.MaxAlignmentForce,
 			b.boidSettings.MaxCohesionForce,
 			b.boidSettings.MaxSeparationForce,
-			b.boidSettings.MaxSpeed,
 		}
-		sort.Slice(forces, func(i, j int) bool { return forces[i] < forces[j] })
+		sort.Slice(forces, func(i, j int) bool { return forces[i] > forces[j] })
 		heighestForce := forces[0] * 10
 
 		// Calculate the opposite force vector that will move the boid away from the walls
