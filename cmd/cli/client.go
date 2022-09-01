@@ -132,7 +132,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	m.screen.Clear()
 
-	for _, b := range *m.flock.Boids {
+	for _, b := range m.flock.Boids {
 		// Convert the current virtual boid position to a terminal coordinate
 		termX := int(math.Floor(float64(m.screen.Width) / m.virtualScreen.Width * b.Position.X()))
 		termY := int(math.Floor(float64(m.screen.Height) / m.virtualScreen.Height * b.Position.Y()))

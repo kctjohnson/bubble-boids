@@ -7,11 +7,12 @@ import (
 
 	"github.com/go-gl/mathgl/mgl64"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
+	"github.com/kctjohnson/bubble-boids/internal/quadtree"
 )
 
 type Flock struct {
 	BoidSettings *BoidSettings
-	Boids        *[]*Boid
+	Boids        []Boid
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -21,11 +22,10 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 	newBoidSettings := NewBoidSettings()
 
 	// Create the flock slice and initialize each boid
-	newBoidSlice := new([]*Boid)
-	*newBoidSlice = make([]*Boid, 0)
+	newBoidSlice := make([]Boid, 0)
 	numberOfBoids := BoidCount
 	for i := 0; i < numberOfBoids; i++ {
-		*newBoidSlice = append(*newBoidSlice, NewBoid(i, screenWidth, screenHeight, newBoidSettings))
+		newBoidSlice = append(newBoidSlice, NewBoid(i, screenWidth, screenHeight, newBoidSettings))
 	}
 
 	return &Flock{
@@ -36,17 +36,34 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 }
 
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
+	// Create the quadtree map of the boids
+	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 4)
+	for _, b := range f.Boids {
+		point := quadtree.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
+		qtree.Insert(point)
+	}
+
 	f.scatterCounter++
-	for _, b := range *f.Boids {
+	for i, b := range f.Boids {
 		if f.scatterCounter >= ScatterCounterCap {
 			// Randomize velocity and acceleration
 			b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
 			b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
 		} else {
 			b.Edges(screenWidth, screenHeight)
-			b.Flock(f.Boids)
+
+			fPerc := float64(f.BoidSettings.Perception)
+			inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
+				X: b.Position[0] - fPerc,
+				Y: b.Position[1] - fPerc,
+				W: fPerc * 2,
+				H: fPerc * 2,
+			})
+			b.Flock(inRangeOfBoid)
 		}
 		b.Update()
+
+		f.Boids[i] = b
 	}
 
 	if f.scatterCounter >= ScatterCounterCap {
@@ -68,8 +85,8 @@ type Boid struct {
 	boidSettings *BoidSettings
 }
 
-func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *BoidSettings) *Boid {
-	newBoid := new(Boid)
+func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *BoidSettings) Boid {
+	newBoid := Boid{}
 	newBoid.id = id
 	newBoid.boidSettings = boidSettings
 	newBoid.Position = mgl64.Vec2{
@@ -80,6 +97,10 @@ func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *Bo
 	newBoid.Velocity = mathutil.SetMag(newBoid.Velocity, mathutil.RandRange(-boidSettings.MaxSpeed, boidSettings.MaxSpeed))
 	newBoid.Acceleration = mgl64.Vec2{0.0, 0.0}
 	return newBoid
+}
+
+func (b Boid) ID() int {
+	return b.id
 }
 
 // Makes sure the boid can't go outside the bounds of the screen
@@ -128,12 +149,12 @@ func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
 	}
 }
 
-func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
+func (b Boid) BoidLogic(boids []Boid) mgl64.Vec2 {
 	total := 0
 	alignment := mgl64.Vec2{}
 	cohesion := mgl64.Vec2{}
 	separation := mgl64.Vec2{}
-	for _, ob := range *boids {
+	for _, ob := range boids {
 		distance := mathutil.Distance(b.Position, ob.Position)
 		if ob.id != b.id && distance < float64(b.boidSettings.Perception) {
 			// Alignment
@@ -176,7 +197,7 @@ func (b Boid) BoidLogic(boids *[]*Boid) mgl64.Vec2 {
 	return force
 }
 
-func (b *Boid) Flock(boids *[]*Boid) {
+func (b *Boid) Flock(boids []Boid) {
 	force := b.BoidLogic(boids)
 	b.Acceleration = b.Acceleration.Add(force)
 }
