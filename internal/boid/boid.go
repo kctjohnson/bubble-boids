@@ -4,6 +4,7 @@ import (
 	"math"
 	"math/rand"
 	"sort"
+	"sync"
 
 	"github.com/go-gl/mathgl/mgl64"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
@@ -43,32 +44,40 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 		qtree.Insert(point)
 	}
 
+	var wg sync.WaitGroup
+
 	f.scatterCounter++
 	for i, b := range f.Boids {
-		if f.scatterCounter >= ScatterCounterCap {
-			// Randomize velocity and acceleration
-			b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
-			b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
-		} else {
-			b.Edges(screenWidth, screenHeight)
+		wg.Add(1)
+		go func(i int, b Boid) {
+			if f.scatterCounter >= ScatterCounterCap {
+				// Randomize velocity and acceleration
+				b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
+				b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
+			} else {
+				b.Edges(screenWidth, screenHeight)
 
-			fPerc := float64(f.BoidSettings.Perception)
-			inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
-				X: b.Position[0] - fPerc,
-				Y: b.Position[1] - fPerc,
-				W: fPerc * 2,
-				H: fPerc * 2,
-			})
-			b.Flock(inRangeOfBoid)
-		}
-		b.Update()
+				fPerc := float64(f.BoidSettings.Perception)
+				inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
+					X: b.Position[0] - fPerc,
+					Y: b.Position[1] - fPerc,
+					W: fPerc * 2,
+					H: fPerc * 2,
+				})
+				b.Flock(inRangeOfBoid)
+			}
+			b.Update()
 
-		f.Boids[i] = b
+			f.Boids[i] = b
+			wg.Done()
+		}(i, b)
 	}
 
 	if f.scatterCounter >= ScatterCounterCap {
 		f.scatterCounter = 0
 	}
+
+	wg.Wait()
 }
 
 func (f *Flock) Scatter() {
