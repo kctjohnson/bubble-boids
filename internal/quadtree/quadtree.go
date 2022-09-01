@@ -24,23 +24,17 @@ type QuadTree[T any] struct {
 	Length   int
 	Divided  bool
 
-	NE *QuadTree[T]
-	NW *QuadTree[T]
-	SE *QuadTree[T]
-	SW *QuadTree[T]
+	Nodes []QuadTree[T]
 }
 
-func NewQuadTree[T any](boundary Rectangle[T], capacity int) *QuadTree[T] {
-	return &QuadTree[T]{
+func NewQuadTree[T any](boundary Rectangle[T], capacity int) QuadTree[T] {
+	return QuadTree[T]{
 		Boundary: boundary,
 		Points:   make([]Point[T], 0, capacity),
 		Capacity: capacity,
 		Divided:  false,
 		Length:   0,
-		NE:       nil,
-		NW:       nil,
-		SE:       nil,
-		SW:       nil,
+		Nodes:    make([]QuadTree[T], 4, 4),
 	}
 }
 
@@ -54,18 +48,14 @@ func (qt *QuadTree[T]) Insert(p Point[T]) bool {
 		qt.Length++
 		return true
 	} else {
-		if qt.NE == nil {
+		if !qt.Divided {
 			qt.Subdivide()
 		}
 
-		if qt.NE.Insert(p) {
-			return true
-		} else if qt.NW.Insert(p) {
-			return true
-		} else if qt.SE.Insert(p) {
-			return true
-		} else if qt.SW.Insert(p) {
-			return true
+		for i := range qt.Nodes {
+			if qt.Nodes[i].Insert(p) {
+				return true
+			}
 		}
 	}
 
@@ -86,10 +76,9 @@ func (qt *QuadTree[T]) Query(boundary Rectangle[T]) []T {
 	}
 
 	if qt.Divided {
-		pointsInRange = append(pointsInRange, qt.NE.Query(boundary)...)
-		pointsInRange = append(pointsInRange, qt.NW.Query(boundary)...)
-		pointsInRange = append(pointsInRange, qt.SE.Query(boundary)...)
-		pointsInRange = append(pointsInRange, qt.SW.Query(boundary)...)
+		for i := range qt.Nodes {
+			pointsInRange = append(pointsInRange, qt.Nodes[i].Query(boundary)...)
+		}
 	}
 
 	return pointsInRange
@@ -103,10 +92,10 @@ func (qt *QuadTree[T]) Subdivide() {
 	subW := w / 2
 	subH := h / 2
 
-	qt.NE = NewQuadTree(Rectangle[T]{X: x + subW, Y: y + subH, W: subW, H: subH}, qt.Capacity)
-	qt.NW = NewQuadTree(Rectangle[T]{X: x, Y: y + subH, W: subW, H: subH}, qt.Capacity)
-	qt.SE = NewQuadTree(Rectangle[T]{X: x + subW, Y: y, W: subW, H: subH}, qt.Capacity)
-	qt.SW = NewQuadTree(Rectangle[T]{X: x, Y: y, W: subW, H: subH}, qt.Capacity)
+	qt.Nodes[0] = NewQuadTree(Rectangle[T]{X: x + subW, Y: y + subH, W: subW, H: subH}, qt.Capacity)
+	qt.Nodes[1] = NewQuadTree(Rectangle[T]{X: x, Y: y + subH, W: subW, H: subH}, qt.Capacity)
+	qt.Nodes[2] = NewQuadTree(Rectangle[T]{X: x + subW, Y: y, W: subW, H: subH}, qt.Capacity)
+	qt.Nodes[3] = NewQuadTree(Rectangle[T]{X: x, Y: y, W: subW, H: subH}, qt.Capacity)
 
 	qt.Divided = true
 }
