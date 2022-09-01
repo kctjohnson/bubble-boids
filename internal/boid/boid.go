@@ -7,11 +7,12 @@ import (
 
 	"github.com/go-gl/mathgl/mgl64"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
+	"github.com/kctjohnson/bubble-boids/internal/quadtree"
 )
 
 type Flock struct {
-	BoidSettings *BoidSettings
-	Boids        []Boid
+	BoidSettings   *BoidSettings
+	Boids          []Boid
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -35,6 +36,14 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 }
 
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
+	// Create the quadtree map of the boids
+	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 4)
+	for _, b := range f.Boids {
+		point := quadtree.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
+		qtree.Insert(point)
+	}
+
+
 	f.scatterCounter++
 	for i, b := range f.Boids {
 		if f.scatterCounter >= ScatterCounterCap {
@@ -43,9 +52,18 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 			b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
 		} else {
 			b.Edges(screenWidth, screenHeight)
+
+			// fPerc := float64(f.BoidSettings.Perception)
+			// inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
+			// 	X: b.Position[0] - fPerc,
+			// 	Y: b.Position[1] - fPerc,
+			// 	W: fPerc * 2,
+			// 	H: fPerc * 2,
+			// })
 			b.Flock(f.Boids)
 		}
 		b.Update()
+
 		f.Boids[i] = b
 	}
 
@@ -80,6 +98,10 @@ func NewBoid(id int, screenWidth float64, screenHeight float64, boidSettings *Bo
 	newBoid.Velocity = mathutil.SetMag(newBoid.Velocity, mathutil.RandRange(-boidSettings.MaxSpeed, boidSettings.MaxSpeed))
 	newBoid.Acceleration = mgl64.Vec2{0.0, 0.0}
 	return newBoid
+}
+
+func (b Boid) ID() int {
+	return b.id
 }
 
 // Makes sure the boid can't go outside the bounds of the screen
