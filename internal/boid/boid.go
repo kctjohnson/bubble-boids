@@ -13,7 +13,6 @@ import (
 type Flock struct {
 	BoidSettings *BoidSettings
 	Boids        []Boid
-	QuadTree     *quadtree.QuadTree[Boid]
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -43,7 +42,6 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 		point := quadtree.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
 		qtree.Insert(point)
 	}
-	f.QuadTree = qtree
 
 	f.scatterCounter++
 	for i, b := range f.Boids {
