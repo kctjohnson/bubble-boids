@@ -104,9 +104,9 @@ func (qt *QuadTree[T]) Subdivide() {
 	subH := h / 2
 
 	qt.NE = NewQuadTree(Rectangle[T]{X: x + subW, Y: y + subH, W: subW, H: subH}, qt.Capacity)
-	qt.NW = NewQuadTree(Rectangle[T]{X: x - subW, Y: y + subH, W: subW, H: subH}, qt.Capacity)
-	qt.SE = NewQuadTree(Rectangle[T]{X: x + subW, Y: y - subH, W: subW, H: subH}, qt.Capacity)
-	qt.SW = NewQuadTree(Rectangle[T]{X: x - subW, Y: y - subH, W: subW, H: subH}, qt.Capacity)
+	qt.NW = NewQuadTree(Rectangle[T]{X: x, Y: y + subH, W: subW, H: subH}, qt.Capacity)
+	qt.SE = NewQuadTree(Rectangle[T]{X: x + subW, Y: y, W: subW, H: subH}, qt.Capacity)
+	qt.SW = NewQuadTree(Rectangle[T]{X: x, Y: y, W: subW, H: subH}, qt.Capacity)
 
 	qt.Divided = true
 }
