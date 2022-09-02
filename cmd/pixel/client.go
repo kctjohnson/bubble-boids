@@ -16,7 +16,7 @@ var ScreenHeight float64 = 768
 func DrawQT(imd *imdraw.IMDraw, qt *quadtree.QuadTree[boid.Boid]) {
 	imd.Color = colornames.Black
 	imd.Rectangle(1)
-	imd.Push(pixel.V(qt.Boundary.X, qt.Boundary.Y), pixel.V(qt.Boundary.X + qt.Boundary.W, qt.Boundary.Y + qt.Boundary.H))
+	imd.Push(pixel.V(qt.Boundary.X, qt.Boundary.Y), pixel.V(qt.Boundary.X+qt.Boundary.W, qt.Boundary.Y+qt.Boundary.H))
 
 	if qt.NE != nil {
 		DrawQT(imd, qt.NE)
@@ -60,7 +60,6 @@ func run() {
 
 		// Draw the quadtree
 		DrawQT(imd, Flock.QuadTree)
-
 
 		imd.Draw(win)
 		win.Update()

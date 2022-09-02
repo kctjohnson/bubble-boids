@@ -50,5 +50,5 @@ func Limit(vec mgl64.Vec2, max float64) mgl64.Vec2 {
 }
 
 func RandRange(min float64, max float64) float64 {
-	return rand.Float64() * (max - min) + min
+	return rand.Float64()*(max-min) + min
 }

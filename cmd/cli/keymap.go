@@ -68,6 +68,6 @@ var keys = keyMap{
 	IncreaseMaxSpeed:   key.NewBinding(key.WithKeys("g"), key.WithHelp("g", "Inc Max Speed")),
 	DecreaseMaxSpeed:   key.NewBinding(key.WithKeys("b"), key.WithHelp("b", "Dec Max Speed")),
 	Scatter:            key.NewBinding(key.WithKeys(" "), key.WithHelp("space", "Scatter")),
-	ToggleEdgeMode:            key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "Edge Mode")),
+	ToggleEdgeMode:     key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "Edge Mode")),
 	Quit:               key.NewBinding(key.WithKeys("q", "esc", "ctrl+c"), key.WithHelp("q", "Quit")),
 }
