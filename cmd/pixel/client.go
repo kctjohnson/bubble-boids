@@ -13,22 +13,13 @@ var Flock *boid.Flock
 var ScreenWidth float64 = 1024
 var ScreenHeight float64 = 768
 
-func DrawQT(imd *imdraw.IMDraw, qt *quadtree.QuadTree[boid.Boid]) {
+func DrawQT(imd *imdraw.IMDraw, qt quadtree.QuadTree[boid.Boid]) {
 	imd.Color = colornames.Black
 	imd.Rectangle(1)
 	imd.Push(pixel.V(qt.Boundary.X, qt.Boundary.Y), pixel.V(qt.Boundary.X + qt.Boundary.W, qt.Boundary.Y + qt.Boundary.H))
 
-	if qt.NE != nil {
-		DrawQT(imd, qt.NE)
-	}
-	if qt.NW != nil {
-		DrawQT(imd, qt.NW)
-	}
-	if qt.SE != nil {
-		DrawQT(imd, qt.SE)
-	}
-	if qt.SW != nil {
-		DrawQT(imd, qt.SW)
+	for _, node := range(qt.Nodes) {
+		DrawQT(imd, node)
 	}
 }
 
@@ -53,8 +44,12 @@ func run() {
 
 		Flock.Update(ScreenWidth, ScreenHeight)
 		for _, b := range Flock.Boids {
-			imd.Color = colornames.Brown
-			imd.Circle(5, 0)
+			imd.Color = colornames.Blue
+			imd.Circle(2, 0)
+			imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
+
+			imd.Color = colornames.Blue
+			imd.Circle(float64(Flock.BoidSettings.Perception), 1)
 			imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
 		}
 
