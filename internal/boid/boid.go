@@ -14,6 +14,7 @@ import (
 type Flock struct {
 	BoidSettings *BoidSettings
 	Boids        []Boid
+	QuadTree     quadtree.QuadTree[Boid]
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -38,18 +39,20 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 	// Create the quadtree map of the boids
-	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 4)
+	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 10)
 	for _, b := range f.Boids {
 		point := quadtree.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
 		qtree.Insert(point)
 	}
 
+	f.QuadTree = qtree
+
 	var wg sync.WaitGroup
 
 	f.scatterCounter++
-	for i, b := range f.Boids {
+	for i := range f.Boids {
 		wg.Add(1)
-		go func(i int, b Boid) {
+		go func(i int, b *Boid) {
 			if f.scatterCounter >= ScatterCounterCap {
 				// Randomize velocity and acceleration
 				b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
@@ -67,10 +70,8 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 				b.Flock(inRangeOfBoid)
 			}
 			b.Update()
-
-			f.Boids[i] = b
 			wg.Done()
-		}(i, b)
+		}(i, &f.Boids[i])
 	}
 
 	if f.scatterCounter >= ScatterCounterCap {
