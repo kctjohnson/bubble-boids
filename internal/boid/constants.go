@@ -3,6 +3,8 @@ package boid
 const (
 	BoidCount         = 300
 	ScatterCounterCap = 600
+	QuadCap           = 10
+	FOV               = 90
 )
 
 type EdgeMode int
@@ -24,10 +26,10 @@ type BoidSettings struct {
 func NewBoidSettings() *BoidSettings {
 	return &BoidSettings{
 		EdgeMode:           EDGE_AVOID,
-		MaxAlignmentForce:  0.3,
-		MaxCohesionForce:   0.3,
-		MaxSeparationForce: 0.3,
-		MaxSpeed:           2.5,
-		Perception:         30,
+		MaxAlignmentForce:  0.1,
+		MaxCohesionForce:   0.1,
+		MaxSeparationForce: 0.1,
+		MaxSpeed:           5.5,
+		Perception:         100,
 	}
 }

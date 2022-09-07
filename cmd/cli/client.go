@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
+	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"golang.org/x/term"
 )
 
@@ -155,6 +156,7 @@ func (m Model) View() string {
 	screenView := m.viewStyle.Render(screen)
 	screenView += fmt.Sprintf("\nAlignment: %.1f | Cohesion: %.1f | Separation: %.1f | Perception: %d | Speed: %.1f", m.flock.BoidSettings.MaxAlignmentForce, m.flock.BoidSettings.MaxCohesionForce, m.flock.BoidSettings.MaxSeparationForce, m.flock.BoidSettings.Perception, m.flock.BoidSettings.MaxSpeed)
 	screenView += "\n" + m.help.View(m.keys)
+	screenView += "\n" + fmt.Sprintf("%.3f | %.3f",mathutil.GetVecAngle(m.flock.Boids[0].Velocity), mathutil.GetAngleBetween(m.flock.Boids[0].Position, m.flock.Boids[1].Position))
 
 	return screenView
 }

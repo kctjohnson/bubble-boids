@@ -39,7 +39,7 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 	// Create the quadtree map of the boids
-	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 10)
+	qtree := quadtree.NewQuadTree(quadtree.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, QuadCap)
 	for _, b := range f.Boids {
 		point := quadtree.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
 		qtree.Insert(point)
@@ -159,6 +159,13 @@ func (b *Boid) Edges(screenWidth float64, screenHeight float64) {
 	}
 }
 
+func (b Boid) OtherVisible(other Boid) bool {
+	distance := mathutil.Distance(b.Position, other.Position)
+	angleBetween := mathutil.GetAngleBetween(b.Position, other.Position)
+	viewAngle := mathutil.GetVecAngle(b.Velocity)
+	return distance < float64(b.boidSettings.Perception/2) && math.Abs(viewAngle-angleBetween) < FOV/2
+}
+
 func (b Boid) BoidLogic(boids []Boid) mgl64.Vec2 {
 	total := 0
 	alignment := mgl64.Vec2{}
@@ -166,7 +173,7 @@ func (b Boid) BoidLogic(boids []Boid) mgl64.Vec2 {
 	separation := mgl64.Vec2{}
 	for _, ob := range boids {
 		distance := mathutil.Distance(b.Position, ob.Position)
-		if ob.id != b.id && distance < float64(b.boidSettings.Perception) {
+		if ob.id != b.id && b.OtherVisible(ob) {
 			// Alignment
 			alignment = alignment.Add(ob.Velocity)
 
