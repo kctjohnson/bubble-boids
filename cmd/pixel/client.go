@@ -7,15 +7,13 @@ import (
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
-	"github.com/kctjohnson/bubble-boids/internal/dbscan"
-	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"github.com/kctjohnson/bubble-boids/internal/quadtree"
 	"golang.org/x/image/colornames"
 )
 
 var Flock *boid.Flock
-var ScreenWidth float64 = 1920
-var ScreenHeight float64 = 1080
+var ScreenWidth float64 = 1024
+var ScreenHeight float64 = 768
 
 var ClusterColors = []color.RGBA{
 	colornames.Red,
@@ -57,31 +55,19 @@ func run() {
 
 		Flock.Update(ScreenWidth, ScreenHeight)
 
-		qtree := quadtree.NewQuadTree(mathutil.Rectangle[boid.Boid]{X: 0, Y: 0, W: ScreenWidth, H: ScreenHeight}, 10)
-		positions := make([]mathutil.Point[boid.Boid], len(Flock.Boids))
-		for i, b := range Flock.Boids {
-			positions[i] = mathutil.Point[boid.Boid]{
-				X:        b.Position[0],
-				Y:        b.Position[1],
-				UserData: b,
-			}
-			qtree.Insert(positions[i])
-		}
-		scanInfo := dbscan.DBScan(qtree, positions, 4, float64(Flock.BoidSettings.Perception))
-
-		for i, cluster := range scanInfo.Clusters {
-			imd.Color = ClusterColors[i%len(ClusterColors)]
-			for _, b := range cluster {
-				imd.Circle(5, 0)
-				imd.Push(pixel.V(b.UserData.X(), b.UserData.Y()))
-			}
-		}
-
-		for _, b := range scanInfo.Noise {
-			imd.Color = colornames.Aqua
-			imd.Circle(5, 0)
-			imd.Push(pixel.V(b.UserData.X(), b.UserData.Y()))
-		}
+		// for i, cluster := range Flock.ScanInfo.Clusters {
+		// 	imd.Color = ClusterColors[i%len(ClusterColors)]
+		// 	for _, b := range cluster {
+		// 		imd.Circle(5, 0)
+		// 		imd.Push(pixel.V(b.UserData.X(), b.UserData.Y()))
+		// 	}
+		// }
+		//
+		// for _, b := range Flock.ScanInfo.Noise {
+		// 	imd.Color = colornames.Aqua
+		// 	imd.Circle(5, 0)
+		// 	imd.Push(pixel.V(b.UserData.X(), b.UserData.Y()))
+		// }
 
 		for _, b := range Flock.Boids {
 			imd.Color = colornames.Blue
@@ -94,7 +80,7 @@ func run() {
 		}
 
 		// Draw the quadtree
-		DrawQT(imd, qtree)
+		//DrawQT(imd, Flock.QuadTree)
 
 		imd.Draw(win)
 		win.Update()

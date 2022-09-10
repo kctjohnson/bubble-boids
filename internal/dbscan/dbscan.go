@@ -1,7 +1,6 @@
 package dbscan
 
 import (
-	"github.com/go-gl/mathgl/mgl64"
 	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"github.com/kctjohnson/bubble-boids/internal/quadtree"
 )
@@ -25,10 +24,9 @@ func DBScan[T any](qtree quadtree.QuadTree[T], points []mathutil.Point[T], minDe
 	markedForNoise := make([]mathutil.Point[T], 0, len(points))
 	info := DBScanInfo[T]{
 		Clusters: make(map[int][]mathutil.Point[T]),
-		Noise: make([]mathutil.Point[T], 0, len(points)),
+		Noise:    make([]mathutil.Point[T], 0, len(points)),
 	}
-	// clusters := make(map[int][]mathutil.Point[T])
-	// noise := make([]mathutil.Point[T], 0, len(points))
+
 	c := 0
 	for _, p := range points {
 		// We've already visited this point, skip it
@@ -75,7 +73,12 @@ func DBScan[T any](qtree quadtree.QuadTree[T], points []mathutil.Point[T], minDe
 			info.Clusters[c] = append(info.Clusters[c], neighbors[i])
 
 			// Get the next neighbors to search
-			nextNeighbors := rangeQuery(points, neighbors[i], perception)
+			nextNeighbors := qtree.Query(mathutil.Rectangle[T]{
+				X: neighbors[i].X - perception,
+				Y: neighbors[i].Y - perception,
+				W: perception * 2,
+				H: perception * 2,
+			})
 			for _, n := range nextNeighbors {
 				neighbors = append(neighbors, n)
 			}
@@ -83,6 +86,7 @@ func DBScan[T any](qtree quadtree.QuadTree[T], points []mathutil.Point[T], minDe
 
 	}
 
+	// Add all noise points to the noise group
 	for _, m := range markedForNoise {
 		if visited[m.UserData.ID()] == Noise {
 			info.Noise = append(info.Noise, m)
@@ -90,16 +94,4 @@ func DBScan[T any](qtree quadtree.QuadTree[T], points []mathutil.Point[T], minDe
 	}
 
 	return info
-}
-
-func rangeQuery[T any](points []mathutil.Point[T], point mathutil.Point[T], perception float64) []mathutil.Point[T] {
-	neighbors := make([]mathutil.Point[T], 0)
-	for _, p := range points {
-		v1 := mgl64.Vec2{p.X, p.Y}
-		v2 := mgl64.Vec2{point.X, point.Y}
-		if mathutil.Distance(v1, v2) < perception {
-			neighbors = append(neighbors, p)
-		}
-	}
-	return neighbors
 }

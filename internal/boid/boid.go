@@ -16,6 +16,7 @@ type Flock struct {
 	BoidSettings *BoidSettings
 	Boids        []Boid
 	QuadTree     quadtree.QuadTree[Boid]
+	ScanInfo     dbscan.DBScanInfo[Boid]
 
 	scatterCounter int // Starts at 0, when it hits ScatterCounterCap, all of the boids are scattered
 }
@@ -39,7 +40,7 @@ func NewFlock(screenWidth float64, screenHeight float64) *Flock {
 }
 
 func (f *Flock) UpdateCluster(cluster []mathutil.Point[Boid], screenWidth float64, screenHeight float64, wg *sync.WaitGroup) {
-	qtree := quadtree.NewQuadTree(mathutil.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 10)
+	qtree := quadtree.NewQuadTree(mathutil.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 4)
 	for _, bPoint := range cluster {
 		qtree.Insert(bPoint)
 	}
@@ -63,25 +64,16 @@ func (f *Flock) UpdateCluster(cluster []mathutil.Point[Boid], screenWidth float6
 			b.Flock(inRangeOfBoid)
 		}
 		b.Update()
-		f.UpdateBoid(b)
+		f.Boids[b.ID()] = b
 	}
 
 	wg.Done()
 }
 
-func (f *Flock) UpdateBoid(b Boid) {
-	for i := range f.Boids {
-		if f.Boids[i].ID() == b.ID() {
-			f.Boids[i] = b
-			break
-		}
-	}
-}
-
 func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 	// Create the quadtree map of the boids
 	positions := make([]mathutil.Point[Boid], len(f.Boids))
-	qtree := quadtree.NewQuadTree(mathutil.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 10)
+	qtree := quadtree.NewQuadTree(mathutil.Rectangle[Boid]{X: 0, Y: 0, W: screenWidth, H: screenHeight}, 4)
 	for i, b := range f.Boids {
 		positions[i] = mathutil.Point[Boid]{X: b.Position.X(), Y: b.Position.Y(), UserData: b}
 		qtree.Insert(positions[i])
@@ -90,6 +82,7 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 
 	// Scan the boids into groups using the quadtree
 	var scanInfo dbscan.DBScanInfo[Boid] = dbscan.DBScan(qtree, positions, 4, float64(f.BoidSettings.Perception))
+	f.ScanInfo = scanInfo
 
 	// For each cluster start a new update, as well as one for the noise
 	f.scatterCounter++
@@ -100,6 +93,8 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 		wg.Add(1)
 		go f.UpdateCluster(c, screenWidth, screenHeight, &wg)
 	}
+
+	wg.Wait()
 
 	// for i := range f.Boids {
 	// 	wg.Add(1)
