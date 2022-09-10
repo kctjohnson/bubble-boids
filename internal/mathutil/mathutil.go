@@ -7,6 +7,30 @@ import (
 	"github.com/go-gl/mathgl/mgl64"
 )
 
+type Position[T any] interface {
+	ID() int
+	X() float64
+	Y() float64
+	Self() T
+}
+
+type Point[T any] struct {
+	X, Y     float64
+	UserData Position[T]
+}
+
+type Rectangle[T any] struct {
+	X, Y, W, H float64
+}
+
+func (r Rectangle[T]) Contains(p Point[T]) bool {
+	return (p.X >= r.X && p.X <= r.X+r.W && p.Y >= r.Y && p.Y <= r.Y+r.H)
+}
+
+func (r Rectangle[T]) Intersects(other Rectangle[T]) bool {
+	return (r.X < other.X+other.W && r.X+r.W > other.X && r.Y < other.Y+other.H && r.Y+r.H > other.Y)
+}
+
 func RandomVec2(min float64, max float64) mgl64.Vec2 {
 	x := RandRange(min, max)
 	y := RandRange(min, max)

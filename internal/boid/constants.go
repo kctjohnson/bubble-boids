@@ -1,7 +1,7 @@
 package boid
 
 const (
-	BoidCount         = 300
+	BoidCount         = 1000
 	ScatterCounterCap = 600
 )
 
@@ -26,8 +26,8 @@ func NewBoidSettings() *BoidSettings {
 		EdgeMode:           EDGE_AVOID,
 		MaxAlignmentForce:  0.3,
 		MaxCohesionForce:   0.3,
-		MaxSeparationForce: 0.3,
+		MaxSeparationForce: 0.35,
 		MaxSpeed:           2.5,
-		Perception:         30,
+		Perception:         10,
 	}
 }
