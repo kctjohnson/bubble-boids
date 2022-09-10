@@ -48,13 +48,13 @@ func run() {
 			imd.Circle(2, 0)
 			imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
 
-			imd.Color = colornames.Blue
-			imd.Circle(float64(Flock.BoidSettings.Perception), 1)
-			imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
+			// imd.Color = colornames.Blue
+			// imd.Circle(float64(Flock.BoidSettings.Perception), 1)
+			// imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
 		}
 
 		// Draw the quadtree
-		DrawQT(imd, Flock.QuadTree)
+		//DrawQT(imd, Flock.QuadTree)
 
 		imd.Draw(win)
 		win.Update()

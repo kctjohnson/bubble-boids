@@ -51,27 +51,24 @@ func (f *Flock) Update(screenWidth float64, screenHeight float64) {
 
 	f.scatterCounter++
 	for i := range f.Boids {
-		wg.Add(1)
-		go func(i int, b *Boid) {
-			if f.scatterCounter >= ScatterCounterCap {
-				// Randomize velocity and acceleration
-				b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
-				b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
-			} else {
-				b.Edges(screenWidth, screenHeight)
+		b := &f.Boids[i]
+		if f.scatterCounter >= ScatterCounterCap {
+			// Randomize velocity and acceleration
+			b.Velocity = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
+			b.Acceleration = mathutil.RandomVec2(-f.BoidSettings.MaxSpeed, f.BoidSettings.MaxSpeed)
+		} else {
+			b.Edges(screenWidth, screenHeight)
 
-				fPerc := float64(f.BoidSettings.Perception)
-				inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
-					X: b.Position[0] - fPerc,
-					Y: b.Position[1] - fPerc,
-					W: fPerc * 2,
-					H: fPerc * 2,
-				})
-				b.Flock(inRangeOfBoid)
-			}
-			b.Update()
-			wg.Done()
-		}(i, &f.Boids[i])
+			fPerc := float64(f.BoidSettings.Perception)
+			inRangeOfBoid := qtree.Query(quadtree.Rectangle[Boid]{
+				X: b.Position[0] - fPerc,
+				Y: b.Position[1] - fPerc,
+				W: fPerc * 2,
+				H: fPerc * 2,
+			})
+			b.Flock(inRangeOfBoid)
+		}
+		b.Update()
 	}
 
 	if f.scatterCounter >= ScatterCounterCap {

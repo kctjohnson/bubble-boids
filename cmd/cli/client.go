@@ -65,31 +65,32 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.screen.UpdateScreenSize(msg.Width-BorderPadding, msg.Height-HelpHeight-BorderPadding)
 		return m, nil
 	case tea.KeyMsg:
+		const adjustAmount = 0.01
 		switch {
 		case key.Matches(msg, m.keys.ModifyAlignment):
 			if key.Matches(msg, m.keys.IncreaseAlignment) {
-				m.flock.BoidSettings.MaxAlignmentForce += 0.1
+				m.flock.BoidSettings.MaxAlignmentForce += adjustAmount
 			} else {
 				if m.flock.BoidSettings.MaxAlignmentForce > 0.0 {
-					m.flock.BoidSettings.MaxAlignmentForce -= 0.1
+					m.flock.BoidSettings.MaxAlignmentForce -= adjustAmount
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifyCohesion):
 			if key.Matches(msg, m.keys.IncreaseCohesion) {
-				m.flock.BoidSettings.MaxCohesionForce += 0.1
+				m.flock.BoidSettings.MaxCohesionForce += adjustAmount
 			} else {
 				if m.flock.BoidSettings.MaxCohesionForce > 0.0 {
-					m.flock.BoidSettings.MaxCohesionForce -= 0.1
+					m.flock.BoidSettings.MaxCohesionForce -= adjustAmount
 				}
 			}
 
 		case key.Matches(msg, m.keys.ModifySeparation):
 			if key.Matches(msg, m.keys.IncreaseSeparation) {
-				m.flock.BoidSettings.MaxSeparationForce += 0.1
+				m.flock.BoidSettings.MaxSeparationForce += adjustAmount
 			} else {
 				if m.flock.BoidSettings.MaxSeparationForce > 0.0 {
-					m.flock.BoidSettings.MaxSeparationForce -= 0.1
+					m.flock.BoidSettings.MaxSeparationForce -= adjustAmount
 				}
 			}
 
@@ -104,10 +105,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 		case key.Matches(msg, m.keys.ModifyMaxSpeed):
 			if key.Matches(msg, m.keys.IncreaseMaxSpeed) {
-				m.flock.BoidSettings.MaxSpeed += 0.1
+				m.flock.BoidSettings.MaxSpeed += adjustAmount
 			} else {
 				if m.flock.BoidSettings.MaxSpeed > 0.0 {
-					m.flock.BoidSettings.MaxSpeed -= 0.1
+					m.flock.BoidSettings.MaxSpeed -= adjustAmount
 				}
 			}
 
@@ -153,7 +154,7 @@ func (m Model) View() string {
 
 	screen := m.screen.GetScreen()
 	screenView := m.viewStyle.Render(screen)
-	screenView += fmt.Sprintf("\nAlignment: %.1f | Cohesion: %.1f | Separation: %.1f | Perception: %d | Speed: %.1f", m.flock.BoidSettings.MaxAlignmentForce, m.flock.BoidSettings.MaxCohesionForce, m.flock.BoidSettings.MaxSeparationForce, m.flock.BoidSettings.Perception, m.flock.BoidSettings.MaxSpeed)
+	screenView += fmt.Sprintf("\nAlignment: %.2f | Cohesion: %.2f | Separation: %.2f | Perception: %d | Speed: %.2f", m.flock.BoidSettings.MaxAlignmentForce, m.flock.BoidSettings.MaxCohesionForce, m.flock.BoidSettings.MaxSeparationForce, m.flock.BoidSettings.Perception, m.flock.BoidSettings.MaxSpeed)
 	screenView += "\n" + m.help.View(m.keys)
 
 	return screenView
