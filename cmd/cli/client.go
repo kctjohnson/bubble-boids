@@ -12,6 +12,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
+	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"golang.org/x/term"
 )
 
@@ -149,7 +150,35 @@ func (m Model) View() string {
 		if termY < 0 {
 			termY = 0
 		}
-		m.screen.SetRune(termX, termY, '*')
+		// Possible chars for the boid: 🡠 🡢 🡡 🡣 🡤 🡥 🡦 🡧
+		boidAngle := mathutil.GetVecAngle(b.Velocity)
+		absAngle := math.Abs(boidAngle)
+		neg := math.Signbit(boidAngle)
+		boidRune := '*'
+		if absAngle > 0 && absAngle < 22.5 {
+			boidRune = '🡢'
+		} else if absAngle >= 22.5 && absAngle < 67.5 {
+			if !neg {
+				boidRune = '🡦'
+			} else {
+				boidRune = '🡥'
+			}
+		} else if absAngle >= 67.5 && absAngle < 112.5 {
+			if !neg {
+				boidRune = '🡣'
+			} else {
+				boidRune = '🡡'
+			}
+		} else if absAngle >= 112.5 && absAngle < 157.5 {
+			if !neg {
+				boidRune = '🡧'
+			} else {
+				boidRune = '🡤'
+			}
+		} else if absAngle >= 157.5 {
+			boidRune = '🡠'
+		}
+		m.screen.SetRune(termX, termY, boidRune)
 	}
 
 	screen := m.screen.GetScreen()

@@ -1,10 +1,15 @@
 package pixel
 
 import (
+	"fmt"
+	"math/rand"
+	"time"
+
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/kctjohnson/bubble-boids/internal/boid"
+	"github.com/kctjohnson/bubble-boids/internal/mathutil"
 	"github.com/kctjohnson/bubble-boids/internal/quadtree"
 	"golang.org/x/image/colornames"
 )
@@ -48,6 +53,8 @@ func run() {
 			imd.Circle(2, 0)
 			imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
 
+			fmt.Printf("Angle: %.3f\n", mathutil.GetVecAngle(b.Velocity))
+
 			// imd.Color = colornames.Blue
 			// imd.Circle(float64(Flock.BoidSettings.Perception), 1)
 			// imd.Push(pixel.V(b.Position.X(), b.Position.Y()))
@@ -62,5 +69,6 @@ func run() {
 }
 
 func Execute() {
+	rand.Seed(time.Now().UTC().UnixNano())
 	pixelgl.Run(run)
 }

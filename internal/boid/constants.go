@@ -1,7 +1,7 @@
 package boid
 
 const (
-	BoidCount         = 500
+	BoidCount         = 300
 	ScatterCounterCap = 600
 )
 
